@@ -15,6 +15,8 @@ def data_process(indexes, times, attributes, values, results=None):
                 data.append(data_temp)
                 if results:
                     label.append([i, j, k] in results)
+    data = np.float32(data)
+    label = np.float32(label)
     if results:
         return data, label
     else:
