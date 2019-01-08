@@ -51,9 +51,12 @@ class BLSTM:
                     #  Each Sample has many combinations to input
                     for k in range(np.shape(ddata)[0]):
                         fhout = self.flstm.forward(ddata[k])
-                        bdata = list(data[k])[-1:0:-1]
-                        bdata.append(data[k][0])
-                        bhout = self.blstm.forward(bdata[k])
+
+                        bdata = list(ddata[k])[-1:0:-1]
+                        bdata.append(ddata[k][0])
+                        bdata = np.array(bdata)
+                        bhout = self.blstm.forward(bdata)
+
                         hout = tf.reduce_mean([fhout, bhout], 0)
                         loss = tf.nn.l2_loss(tf.subtract(hout, np.float32(label[k])))
                         optm = tf.train.GradientDescentOptimizer(lr).minimize(loss)
