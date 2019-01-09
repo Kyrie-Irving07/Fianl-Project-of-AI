@@ -5,27 +5,28 @@ import data.loader as loader
 
 
 class BLSTM:
-    def __init__(self, xhc_size, lr=0.01):
+    def __init__(self, xhc_size, lr=0.01, max_input_length=100):
         with tf.variable_scope('BLSTM', reuse=tf.AUTO_REUSE):
 
             self.flstm = LSTM(xhc_size, 'FLSTM')
             self.blstm = LSTM(xhc_size, 'BLSTM')
 
-            # Error
-            # self.input = tf.placeholder(dtype=tf.float32, shape=[None, xhc_size[0]], name='sentence')
-            # self.label = tf.placeholder(dtype=tf.float32, shape=xhc_size[1], name='probability')
-            #
-            # self.fhout = self.flstm.forward(self.input)
-            # self.bhout = self.blstm.forward(tf.reverse(self.input, 0))
-            # self.hout = tf.reduce_mean(self.fhout, self.bhout)
-            #
-            # self.loss = tf.nn.l2_loss(tf.subtract(self.label, self.hout))
-            # self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
+            self.max_input_length = max_input_length
+
+            self.input = tf.placeholder(dtype=tf.float32, shape=[max_input_length, xhc_size[0]], name='sentence')
+            self.label = tf.placeholder(dtype=tf.float32, shape=xhc_size[1], name='label')
+
+            self.fhout = self.flstm.forward(self.input)
+            self.bhout = self.blstm.forward(tf.reverse(self.input, [0]))
+            self.hout = tf.reduce_mean([self.fhout, self.bhout])
+
+            self.loss = tf.nn.l2_loss(tf.subtract(self.label, self.hout))
+            self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
 
             self.base_address = 'C:\\Users\\Dell\\Desktop\\UCAS\\大三上\\人工智能导论\\大作业\\Final-Project-of-AI\\'
             self.saver = tf.train.Saver(max_to_keep=3)
 
-    def train(self, data_path, maxepoch, lr=0.01, continue_train=False, trained_steps=0):
+    def train(self, data_path, maxepoch, continue_train=False, trained_steps=0):
         data = json.load(open(data_path, 'r'))
 
         config = tf.ConfigProto()
@@ -45,28 +46,21 @@ class BLSTM:
                     attributes = data[i]['attributes']
                     values = data[i]['values']
                     results = data[i]['results']
-                    ddata, label = loader.data_process(indexes, times, attributes, values, results)
+                    ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
+                                                             self.max_input_length)
 
                     loss_array = []
                     #  Each Sample has many combinations to input
                     for k in range(np.shape(ddata)[0]):
-                        fhout = self.flstm.forward(ddata[k])
-
-                        bdata = list(ddata[k])[-1:0:-1]
-                        bdata.append(ddata[k][0])
-                        bdata = np.array(bdata)
-                        bhout = self.blstm.forward(bdata)
-
-                        hout = tf.reduce_mean([fhout, bhout], 0)
-                        loss = tf.nn.l2_loss(tf.subtract(hout, np.float32(label[k])))
-                        optm = tf.train.GradientDescentOptimizer(lr).minimize(loss)
-
-                        # Training while building graphics
-                        loss, _ = sess.run([loss, optm], feed_dict={self.input: ddata[k], self.label: label})
-
-                        # Has built a graphic, but not available now.
-                        # loss, _ = sess.run([self.loss, self.optm], feed_dict={self.input: ddata[k], self.label: label})
+                        test_tensor = self.flstm.input_gate.forward()
+                        test_gate = sess.run([])
+                        loss, _ = sess.run([self.loss, self.optm], feed_dict={self.input: ddata[k],
+                                                                              self.label: [label[k]],
+                                                                              self.flstm.mask: mask,
+                                                                              self.blstm.mask: mask[-1::-1]})
                         loss_array.append(loss)
+                        print('ddata[%d]:' %k, ' label:', label[k])
+                        print('step loss:%50f' %loss)
 
                     print('Epoch:%d  Sample:%d  Mean Loss:%05f' %(j, i, np.average(loss_array)),
                           'Loss: ', loss_array)
@@ -78,6 +72,7 @@ class LSTM:
         with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
 
             self.xhc_size = xhc_size
+            self.mask = tf.placeholder(dtype=tf.int32, shape=[None], name='mask')
 
             self.input_gate = Gate(xhc_size, 'InputGate')
             self.forget_gate = Gate(xhc_size, 'ForgetGate')
@@ -89,6 +84,7 @@ class LSTM:
         h = tf.zeros(shape=[1, self.xhc_size[1]], dtype=tf.float32)
         C = tf.zeros(shape=self.xhc_size[2], dtype=tf.float32)
         insize = np.shape(x)[0]
+        print(insize)
         for i in range(insize):
             # Get the output of gates
             input = self.input_gate.forward(x[i], h)
@@ -100,7 +96,7 @@ class LSTM:
             o = self.output_gate.forward(x[i], h, C)
             h = tf.multiply(o, tf.nn.tanh(tf.reduce_mean(C)))
             hout_array.append(h)
-        hout = tf.reduce_mean(hout_array)
+        hout = tf.reduce_mean(tf.gather(hout_array, self.mask))
         return hout
 
 
@@ -127,9 +123,9 @@ class Gate:
         output = tf.add(tf.matmul(x[np.newaxis, :], self.W), tf.matmul(h, self.U))
         output = tf.add(output, self.b)
         if C is None:
-            assert (self.outgate==False), 'No state C input to output gate'
+            assert (not self.outgate), 'No state C input to output gate'
         else:
-            assert (self.outgate==True), 'Input state C input a normal gate'
+            assert self.outgate, 'Input state C input a normal gate'
             output_c = tf.matmul(C, self.V)
             output = tf.add(output, output_c)
         return output
