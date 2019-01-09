@@ -12,6 +12,7 @@ class BLSTM:
             self.blstm = LSTM(xhc_size, 'BLSTM')
 
             self.max_input_length = max_input_length
+            self.xhc_size = xhc_size
 
             self.input = tf.placeholder(dtype=tf.float32, shape=[max_input_length, xhc_size[0]], name='sentence')
             self.label = tf.placeholder(dtype=tf.float32, shape=xhc_size[1], name='label')
@@ -66,6 +67,49 @@ class BLSTM:
                           'Loss: ', loss_array)
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
 
+    def debug(self, data_path):
+        data = json.load(open(data_path, 'r'))
+        debug_gate = Gate(self.xhc_size, 'debug_Gate')
+        debug_gate_x = tf.placeholder(tf.float32, shape=[self.xhc_size[0]], name='debug_gate_x')
+        debug_gate_h = tf.placeholder(tf.float32, shape=[1, self.xhc_size[1]], name='debug_gate_h')
+        debug_gate_out = debug_gate.forward(debug_gate_x, debug_gate_h)
+
+
+        with tf.Session(config=tf.ConfigProto(
+                        allow_soft_placement=True, log_device_placement=True)) as sess:
+            sess.run(tf.global_variables_initializer())
+
+            #  Test Gate
+            gate_out = sess.run(debug_gate_out, feed_dict={debug_gate_x: np.array([1, 2]),
+                                                           debug_gate_h: np.array([[1]])})
+            print(gate_out)
+
+            #  Test whole network
+            for i in range(np.shape(data)[0]):
+                indexes = data[i]['indexes']
+                times = data[i]['times']
+                attributes = data[i]['attributes']
+                values = data[i]['values']
+                results = data[i]['results']
+                ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
+                                                         self.max_input_length)
+
+                loss_array = []
+                #  Each Sample has many combinations to input
+                for k in range(np.shape(ddata)[0]):
+                    test_tensor = self.flstm.input_gate.forward()
+                    test_gate = sess.run([])
+                    loss, _ = sess.run([self.loss, self.optm], feed_dict={self.input: ddata[k],
+                                                                          self.label: [label[k]],
+                                                                          self.flstm.mask: mask,
+                                                                          self.blstm.mask: mask[-1::-1]})
+                    loss_array.append(loss)
+                    print('ddata[%d]:' %k, ' label:', label[k])
+                    print('step loss:%50f' %loss)
+
+                print('Sample:%d  Mean Loss:%05f' % (i, np.average(loss_array)),
+                      'Loss: ', loss_array)
+
 
 class LSTM:
     def __init__(self, xhc_size, name='LSTM'):
@@ -84,7 +128,6 @@ class LSTM:
         h = tf.zeros(shape=[1, self.xhc_size[1]], dtype=tf.float32)
         C = tf.zeros(shape=self.xhc_size[2], dtype=tf.float32)
         insize = np.shape(x)[0]
-        print(insize)
         for i in range(insize):
             # Get the output of gates
             input = self.input_gate.forward(x[i], h)
