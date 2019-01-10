@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="1b129675-e023-4b43-9568-33e27d46e904" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/model/networks.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/networks.py" afterDir="false" />
-    </list>
+    <list default="true" id="1b129675-e023-4b43-9568-33e27d46e904" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,13 +35,13 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="md" value="9" />
-          <entry key="py" value="8512" />
+          <entry key="py" value="8558" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Markdown" value="9" />
-          <entry key="Python" value="8512" />
+          <entry key="Python" value="8558" />
         </counts>
       </usages-collector>
     </session>
@@ -65,8 +63,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/networks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="66" column="45" selection-start-line="66" selection-start-column="45" selection-end-line="66" selection-end-column="45" />
+            <state relative-caret-position="192">
+              <caret line="70" column="59" lean-forward="true" selection-start-line="70" selection-start-column="59" selection-end-line="70" selection-end-column="59" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -243,7 +241,7 @@
       <window_info anchor="bottom" id="Event Log" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.22269504" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.30780143" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.34042552" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -297,8 +295,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model/networks.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="66" column="45" selection-start-line="66" selection-start-column="45" selection-end-line="66" selection-end-column="45" />
+        <state relative-caret-position="192">
+          <caret line="70" column="59" lean-forward="true" selection-start-line="70" selection-start-column="59" selection-end-line="70" selection-end-column="59" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>

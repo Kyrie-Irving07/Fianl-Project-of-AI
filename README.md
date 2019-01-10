@@ -1,3 +1,3 @@
-# Fianl-Project-of-AI
+# Triples Extration
 
-1.LSTM
+1.Bi direction LSTM
