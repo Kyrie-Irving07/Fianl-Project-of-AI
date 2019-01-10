@@ -54,6 +54,7 @@ class BLSTM:
                     A = len(results)
                     A_ = 0
                     A_and_A_ = 0
+                    correct = 0
                     #  Each Sample has many combinations to input
                     for k in range(np.shape(ddata)[0]):
                         loss, hout, _ = sess.run([self.loss, self.hout, self.optm], feed_dict={self.input: ddata[k],
@@ -65,12 +66,15 @@ class BLSTM:
                             A_ += 1
                             if label[k] > 0:
                                 A_and_A_ += 1
-                    p = A_and_A_ / A_
-                    r = A_and_A_ / A
-                    F = 2 * p * r / (p + r)
+                        if hout * label[k] > 0:
+                            correct += 1.
+                    accuracy = correct / np.shape(ddata)[0]
+                    p = (A_and_A_ / A_) if A_ > 1e-5 else 0.
+                    r = (A_and_A_ / A) if A > 1e-5 else 0.
+                    F = (2 * p * r / (p + r)) if (p + r) > 1e-5 else 0.
                     print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)),
                           ' Loss: ', loss_array)
-                    print('Precise: %05f, Recall: %05f, F1 Score: %05f' % (p, r, F))
+                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f' % (accuracy, p, r, F))
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
 
 
