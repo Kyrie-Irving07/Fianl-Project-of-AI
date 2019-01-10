@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1b129675-e023-4b43-9568-33e27d46e904" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/data/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/loader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/networks.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/networks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
     </list>
@@ -12,7 +13,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/Final_Project_of_AI$Unnamed.coverage" NAME="Unnamed Coverage Results" MODIFIED="1547074194928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Final_Project_of_AI$Unnamed.coverage" NAME="Unnamed Coverage Results" MODIFIED="1547082557446" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FUSProjectUsageTrigger">
     <session id="-1202345792">
@@ -38,13 +39,13 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="md" value="9" />
-          <entry key="py" value="8060" />
+          <entry key="py" value="8393" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Markdown" value="9" />
-          <entry key="Python" value="8060" />
+          <entry key="Python" value="8393" />
         </counts>
       </usages-collector>
     </session>
@@ -66,14 +67,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/networks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="79">
-              <caret line="76" lean-forward="true" selection-start-line="76" selection-end-line="76" />
+            <state relative-caret-position="1975">
+              <caret line="79" lean-forward="true" selection-start-line="79" selection-end-line="79" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
-                <marker date="1547074194918" expanded="true" signature="98:3295" ph="..." />
-                <marker date="1547074194918" expanded="true" signature="5569:5574" ph="..." />
-                <marker date="1547074194918" expanded="true" signature="6857:6859" ph="..." />
-                <marker date="1547074194918" expanded="true" signature="6958:6959" ph="..." />
               </folding>
             </state>
           </provider>
@@ -82,10 +79,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data/loader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="21" column="36" lean-forward="true" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
+            <state relative-caret-position="75">
+              <caret line="3" column="85" selection-start-line="3" selection-start-column="85" selection-end-line="3" selection-end-column="85" />
               <folding>
-                <marker date="1547020829013" expanded="true" signature="139:202" ph="..." />
+                <marker date="1547084127438" expanded="true" signature="139:202" ph="..." />
               </folding>
             </state>
           </provider>
@@ -94,8 +91,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="100">
-              <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+            <state relative-caret-position="75">
+              <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
             </state>
           </provider>
         </entry>
@@ -248,7 +245,7 @@
       <window_info anchor="bottom" id="Event Log" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.40425533" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.35602838" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.34042552" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -270,9 +267,6 @@
     <entry file="file://$PROJECT_DIR$/model">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/test.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
@@ -283,33 +277,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/data/loader.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="21" column="36" lean-forward="true" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
-          <folding>
-            <marker date="1547020829013" expanded="true" signature="139:202" ph="..." />
-          </folding>
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/test.py">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="100">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+        <state relative-caret-position="75">
+          <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/loader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="3" column="85" selection-start-line="3" selection-start-column="85" selection-end-line="3" selection-end-column="85" />
+          <folding>
+            <marker date="1547084127438" expanded="true" signature="139:202" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/model/networks.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="79">
-          <caret line="76" lean-forward="true" selection-start-line="76" selection-end-line="76" />
+        <state relative-caret-position="1975">
+          <caret line="79" lean-forward="true" selection-start-line="79" selection-end-line="79" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <marker date="1547074194918" expanded="true" signature="98:3295" ph="..." />
-            <marker date="1547074194918" expanded="true" signature="5569:5574" ph="..." />
-            <marker date="1547074194918" expanded="true" signature="6857:6859" ph="..." />
-            <marker date="1547074194918" expanded="true" signature="6958:6959" ph="..." />
           </folding>
         </state>
       </provider>

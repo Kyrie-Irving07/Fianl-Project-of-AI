@@ -5,7 +5,7 @@ import data.loader as loader
 
 
 class BLSTM:
-    def __init__(self, xhc_size, lr=0.01, max_input_length=100):
+    def __init__(self, xhc_size, lr=0.01, max_input_length=200):
         with tf.variable_scope('BLSTM', reuse=tf.AUTO_REUSE):
 
             self.flstm = LSTM(xhc_size, 'FLSTM')
@@ -51,64 +51,27 @@ class BLSTM:
                                                              self.max_input_length)
 
                     loss_array = []
+                    A = len(results)
+                    A_ = 0
+                    A_and_A_ = 0
                     #  Each Sample has many combinations to input
                     for k in range(np.shape(ddata)[0]):
-                        test_tensor = self.flstm.input_gate.forward()
-                        test_gate = sess.run([])
-                        loss, _ = sess.run([self.loss, self.optm], feed_dict={self.input: ddata[k],
-                                                                              self.label: [label[k]],
-                                                                              self.flstm.mask: mask,
-                                                                              self.blstm.mask: mask[-1::-1]})
+                        loss, hout, _ = sess.run([self.loss, self.hout, self.optm], feed_dict={self.input: ddata[k],
+                                                                                               self.label: [label[k]],
+                                                                                               self.flstm.mask: mask,
+                                                                                               self.blstm.mask: mask[-1::-1]})
                         loss_array.append(loss)
-                        print('ddata[%d]:' %k, ' label:', label[k])
-                        print('step loss:%50f' %loss)
-
-                    print('Epoch:%d  Sample:%d  Mean Loss:%05f' %(j, i, np.average(loss_array)),
-                          'Loss: ', loss_array)
+                        if hout > 0:
+                            A_ += 1
+                            if label[k] > 0:
+                                A_and_A_ += 1
+                    p = A_and_A_ / A_
+                    r = A_and_A_ / A
+                    F = 2 * p * r / (p + r)
+                    print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)),
+                          ' Loss: ', loss_array)
+                    print('Precise: %05f, Recall: %05f, F1 Score: %05f' % (p, r, F))
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
-
-    def debug(self, data_path):
-        data = json.load(open(data_path, 'r'))
-        debug_gate = Gate(self.xhc_size, 'debug_Gate')
-        debug_gate_x = tf.placeholder(tf.float32, shape=[self.xhc_size[0]], name='debug_gate_x')
-        debug_gate_h = tf.placeholder(tf.float32, shape=[1, self.xhc_size[1]], name='debug_gate_h')
-        debug_gate_out = debug_gate.forward(debug_gate_x, debug_gate_h)
-
-
-        with tf.Session(config=tf.ConfigProto(
-                        allow_soft_placement=True, log_device_placement=True)) as sess:
-            sess.run(tf.global_variables_initializer())
-
-            #  Test Gate
-            gate_out = sess.run(debug_gate_out, feed_dict={debug_gate_x: np.array([1, 2]),
-                                                           debug_gate_h: np.array([[1]])})
-            print(gate_out)
-
-            #  Test whole network
-            for i in range(np.shape(data)[0]):
-                indexes = data[i]['indexes']
-                times = data[i]['times']
-                attributes = data[i]['attributes']
-                values = data[i]['values']
-                results = data[i]['results']
-                ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
-                                                         self.max_input_length)
-
-                loss_array = []
-                #  Each Sample has many combinations to input
-                for k in range(np.shape(ddata)[0]):
-                    test_tensor = self.flstm.input_gate.forward()
-                    test_gate = sess.run([])
-                    loss, _ = sess.run([self.loss, self.optm], feed_dict={self.input: ddata[k],
-                                                                          self.label: [label[k]],
-                                                                          self.flstm.mask: mask,
-                                                                          self.blstm.mask: mask[-1::-1]})
-                    loss_array.append(loss)
-                    print('ddata[%d]:' %k, ' label:', label[k])
-                    print('step loss:%50f' %loss)
-
-                print('Sample:%d  Mean Loss:%05f' % (i, np.average(loss_array)),
-                      'Loss: ', loss_array)
 
 
 class LSTM:
@@ -140,6 +103,7 @@ class LSTM:
             h = tf.multiply(o, tf.nn.tanh(tf.reduce_mean(C)))
             hout_array.append(h)
         hout = tf.reduce_mean(tf.gather(hout_array, self.mask))
+        # hout = tf.reduce_mean(hout_array)
         return hout
 
 
@@ -171,4 +135,5 @@ class Gate:
             assert self.outgate, 'Input state C input a normal gate'
             output_c = tf.matmul(C, self.V)
             output = tf.add(output, output_c)
+        output = self.activation(output)
         return output

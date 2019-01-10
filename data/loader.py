@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def data_process(indexes, times, attributes, values, results=None, max_input_length=100):
+def data_process(indexes, times, attributes, values, results=None, max_input_length=200):
     label = []
     data = []
     template = np.transpose([indexes, np.zeros_like(indexes)])
@@ -15,8 +15,7 @@ def data_process(indexes, times, attributes, values, results=None, max_input_len
                 data_temp[j][1] = 2  # Attr  label 2
                 data_temp[k][1] = 3  # Value label 3
                 data.append(data_temp)
-                if results:
-                    label.append([i, j, k] in results)
+                label.append([i, j, k] in results)
     data = np.float32(data)
     label = np.float32(label)
     mask = list(range(len(indexes)))
