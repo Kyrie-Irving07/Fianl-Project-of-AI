@@ -4,7 +4,7 @@ import numpy as np
 import data.loader as loader
 
 
-class BLSTM:
+class C_BLSTM:
     def __init__(self, xhc_size, lr=0.01, max_input_length=200):
         with tf.variable_scope('BLSTM', reuse=tf.AUTO_REUSE):
 
@@ -17,8 +17,9 @@ class BLSTM:
             self.input = tf.placeholder(dtype=tf.float32, shape=[max_input_length, xhc_size[0]], name='sentence')
             self.label = tf.placeholder(dtype=tf.float32, shape=xhc_size[1], name='label')
 
-            self.fhout = self.flstm.forward(self.input)
-            self.bhout = self.blstm.forward(tf.reverse(self.input, [0]))
+            self.condition = self.Cond_conv(self.input)
+            self.fhout = self.flstm.forward(self.input, self.condition)
+            self.bhout = self.blstm.forward(tf.reverse(self.input, [0]), self.condition)
             self.hout = tf.reduce_mean([self.fhout, self.bhout])
 
             self.loss = tf.nn.l2_loss(tf.subtract(self.label, self.hout))
@@ -26,6 +27,32 @@ class BLSTM:
 
             self.base_address = 'C:\\Users\\Dell\\Desktop\\UCAS\\大三上\\人工智能导论\\大作业\\Final-Project-of-AI\\'
             self.saver = tf.train.Saver(max_to_keep=3)
+
+    def Cond_conv(self, input, name='Conditional_layer_CNN'):
+        with tf.variable_scope(name):
+            #  Input shape : [1, 200, 2]
+            output0 = self.set_conv(input, 2, 'conv_layer0')    # Output0 shape : [1, 100, 2]
+            output1 = self.set_conv(output0, 2, 'conv_layer1')  # Output1 shape : [1, 50, 2]
+            output2 = self.set_conv(output1, 2, 'conv_layer2')  # Output2 shape : [1, 25, 2]
+            output3 = self.set_conv(output2, 5, 'conv_layer3')  # Output3 shape : [1, 5, 2]
+            W = tf.get_variable('CNN_W', shape=[2, 1], dtype=tf.float32,
+                                initializer=tf.random_normal_initializer())
+            b = tf.get_variable('CNN_b', shape=[1], dtype=tf.float32,
+                                initializer=tf.random_normal_initializer())
+            condition = tf.nn.tanh(tf.squeeze(tf.add(tf.matmul(output3, W), b)))
+            return condition
+
+
+    def set_conv(self, input, scale, name='conv'):
+        with tf.name_scope(name):
+            filter = tf.get_variable('filter', shape=[5, self.xhc_size[0]], dtype=tf.float32,
+                                     initializer=tf.random_normal_initializer())
+            b = tf.get_variable('b', shape=[self.xhc_size[0]], dtype=tf.float32,
+                                initializer=tf.random_normal_initializer())
+            output = tf.nn.conv2d(input, filter=filter, strides=[1, 1, 1, 1], padding='SAME')
+            output = tf.nn.leaky_relu(tf.add(output, b))
+            output = tf.nn.max_pool(output, ksize=[1, 2, 2, 1], strides=[1, scale, 1, 1], padding='SAME')
+            return output
 
     def train(self, data_path, maxepoch, continue_train=False, trained_steps=0):
         data = json.load(open(data_path, 'r'))
@@ -90,10 +117,10 @@ class LSTM:
             self.state_gate = Gate(xhc_size, 'State_Gate', tf.nn.tanh)
             self.output_gate = Gate(xhc_size, 'OutputGate', tf.nn.sigmoid, True)
 
-    def forward(self, x):
+    def forward(self, x, condition):
         hout_array = []
         h = tf.zeros(shape=[1, self.xhc_size[1]], dtype=tf.float32)
-        C = tf.zeros(shape=self.xhc_size[2], dtype=tf.float32)
+        C = condition
         insize = np.shape(x)[0]
         for i in range(insize):
             # Get the output of gates
