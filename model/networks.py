@@ -104,6 +104,51 @@ class C_BLSTM:
                     print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f' % (accuracy, p, r, F))
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
 
+    def test(self, data_path):
+        data = json.load(open(data_path, 'r'))
+
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        with tf.Session(config=config) as sess:
+            sess.run(tf.global_variables_initializer())
+            latest = tf.train.latest_checkpoint(self.base_address + 'parameters/')
+            self.saver.restore(sess, latest)
+
+            A = 0.
+            A_ = 0.
+            A_and_A_ = 0.
+            correct = 0.
+            data_num = 0.
+            #  Sample in a Epoch
+            for i in range(np.shape(data)[0]):
+                indexes = data[i]['indexes']
+                times = data[i]['times']
+                attributes = data[i]['attributes']
+                values = data[i]['values']
+                results = data[i]['results']
+                ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
+                                                         self.max_input_length)
+                #  Each Sample has many combinations to input
+                for k in range(np.shape(ddata)[0]):
+                    hout = sess.run(self.hout, feed_dict={self.input: ddata[k],
+                                                          self.label: [label[k]],
+                                                          self.flstm.mask: mask,
+                                                          self.blstm.mask: mask[-1::-1]})
+                    if hout > 0:
+                        A_ += 1
+                        if label[k] > 0:
+                            A_and_A_ += 1
+                    if hout * label[k] > 0:
+                        correct += 1.
+                A += len(results)
+                data_num += np.shape(ddata)[0]
+
+            accuracy = correct / data_num
+            p = (A_and_A_ / A_)  # if A_ > 1e-5 else 1.
+            r = (A_and_A_ / A)  # if A > 1e-5 else 1.
+            F = (2 * p * r / (p + r))  # if (p + r) > 1e-5 else 0.
+            print('Accuracy: %05f, Precise: %05f, Recall: %05f, F1 Score: %05f' % (accuracy, p, r, F))
+
 
 class LSTM:
     def __init__(self, xhc_size, name='LSTM'):
