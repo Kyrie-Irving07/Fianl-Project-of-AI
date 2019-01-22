@@ -22,7 +22,11 @@ class C_BLSTM:
             self.bhout = self.blstm.forward(tf.reverse(self.input, [0]), self.condition)
             self.hout = tf.reduce_mean([self.fhout, self.bhout])
 
-            self.loss = tf.nn.l2_loss(tf.subtract(self.label, self.hout))
+            is_positive = tf.cast(tf.equal(self.label, 1), tf.float32)
+            weight = 10 * is_positive + 1 * (1 - is_positive)
+            self.loss = tf.multiply(weight, tf.nn.l2_loss(tf.subtract(self.label, self.hout)))
+
+            print("Building optimization")
             self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
 
             self.base_address = 'C:\\Users\\Dell\\Desktop\\UCAS\\大三上\\人工智能导论\\大作业\\Final-Project-of-AI\\'
@@ -30,24 +34,25 @@ class C_BLSTM:
 
     def Cond_conv(self, input, name='Conditional_layer_CNN'):
         with tf.variable_scope(name):
-            #  Input shape : [1, 200, 2]
-            output0 = self.set_conv(input, 2, 'conv_layer0')    # Output0 shape : [1, 100, 2]
-            output1 = self.set_conv(output0, 2, 'conv_layer1')  # Output1 shape : [1, 50, 2]
-            output2 = self.set_conv(output1, 2, 'conv_layer2')  # Output2 shape : [1, 25, 2]
-            output3 = self.set_conv(output2, 5, 'conv_layer3')  # Output3 shape : [1, 5, 2]
+            #  Input shape : [1, 200, 2, 1]
+            input = input[np.newaxis, :, :, np.newaxis]
+            output0 = self.set_conv(input, 2, 64, 'conv_layer0')    # Output0 shape : [1, 100, 2, 64]
+            output1 = self.set_conv(output0, 2, 128, 'conv_layer1')  # Output1 shape : [1, 50, 2, 128]
+            output2 = self.set_conv(output1, 2, 64, 'conv_layer2')  # Output2 shape : [1, 25, 2, 64]
+            output3 = self.set_conv(output2, 5, 1, 'conv_layer3')  # Output3 shape : [1, 5, 2, 1]
             W = tf.get_variable('CNN_W', shape=[2, 1], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
             b = tf.get_variable('CNN_b', shape=[1], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
+            output3 = tf.squeeze(output3)
             condition = tf.nn.tanh(tf.squeeze(tf.add(tf.matmul(output3, W), b)))
             return condition
 
-
-    def set_conv(self, input, scale, name='conv'):
-        with tf.name_scope(name):
-            filter = tf.get_variable('filter', shape=[5, self.xhc_size[0]], dtype=tf.float32,
+    def set_conv(self, input, scale, channel, name='conv'):
+        with tf.variable_scope(name):
+            filter = tf.get_variable('filter', shape=[5, self.xhc_size[0], np.shape(input)[-1], channel], dtype=tf.float32,
                                      initializer=tf.random_normal_initializer())
-            b = tf.get_variable('b', shape=[self.xhc_size[0]], dtype=tf.float32,
+            b = tf.get_variable('b', shape=[channel], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
             output = tf.nn.conv2d(input, filter=filter, strides=[1, 1, 1, 1], padding='SAME')
             output = tf.nn.leaky_relu(tf.add(output, b))
@@ -154,6 +159,7 @@ class LSTM:
     def __init__(self, xhc_size, name='LSTM'):
         with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
 
+            self.name = name
             self.xhc_size = xhc_size
             self.mask = tf.placeholder(dtype=tf.int32, shape=[None], name='mask')
 
@@ -168,6 +174,7 @@ class LSTM:
         C = condition
         insize = np.shape(x)[0]
         for i in range(insize):
+            print("Building operation: " + self.name + "/forward %d" %i)
             # Get the output of gates
             input = self.input_gate.forward(x[i], h)
             forget = self.forget_gate.forward(x[i], h)
