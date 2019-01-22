@@ -27,7 +27,7 @@ class C_BLSTM:
             print("Building optimization")
             self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
 
-            self.base_address = 'C:\\Users\\Dell\\Desktop\\UCAS\\大三上\\人工智能导论\\大作业\\Final-Project-of-AI\\'
+            self.base_address = 'D:\\CS\\人工智能大作业\\BLSTM-for-Triples-Extraction\\'
             self.saver = tf.train.Saver(max_to_keep=3)
 
     def Cond_conv(self, input, name='Conditional_layer_CNN'):
@@ -129,6 +129,7 @@ class C_BLSTM:
             data_num = 0.
             #  Sample in a Epoch
             for i in range(np.shape(data)[0]):
+                print("Sample %d / %d" % (i, np.shape(data)[0]))
                 indexes = data[i]['indexes']
                 times = data[i]['times']
                 attributes = data[i]['attributes']
