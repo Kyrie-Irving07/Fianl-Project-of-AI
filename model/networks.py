@@ -22,9 +22,7 @@ class C_BLSTM:
             self.bhout = self.blstm.forward(tf.reverse(self.input, [0]), self.condition)
             self.hout = tf.reduce_mean([self.fhout, self.bhout])
 
-            is_positive = tf.cast(tf.equal(self.label, 1), tf.float32)
-            weight = 10 * is_positive + 1 * (1 - is_positive)
-            self.loss = tf.multiply(weight, tf.nn.l2_loss(tf.subtract(self.label, self.hout)))
+            self.loss = tf.nn.l2_loss(tf.subtract(self.label, self.hout))
 
             print("Building optimization")
             self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
@@ -104,9 +102,8 @@ class C_BLSTM:
                     p = (A_and_A_ / A_) if A_ > 1e-5 else 0.
                     r = (A_and_A_ / A) if A > 1e-5 else 0.
                     F = (2 * p * r / (p + r)) if (p + r) > 1e-5 else 0.
-                    print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)),
-                          ' Loss: ', loss_array)
-                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f' % (accuracy, p, r, F))
+                    print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)))
+                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f, All: %d, Result: %d, A_: %d, correct: %d, Bad: %d' % (accuracy, p, r, F, np.shape(ddata)[0], A, A_, correct, (np.shape(ddata)[0] == A_)))
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
 
     def test(self, data_path):
