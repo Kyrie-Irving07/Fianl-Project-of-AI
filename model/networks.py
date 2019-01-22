@@ -49,7 +49,7 @@ class BLSTM:
                     results = data[i]['results']
                     ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
                                                              self.max_input_length)
-
+                    bmask = self.max_input_length - mask - 1
                     loss_array = []
                     A = len(results)
                     A_ = 0
@@ -59,8 +59,9 @@ class BLSTM:
                     for k in range(np.shape(ddata)[0]):
                         loss, hout, _ = sess.run([self.loss, self.hout, self.optm], feed_dict={self.input: ddata[k],
                                                                                                self.label: [label[k]],
-                                                                                               self.flstm.mask: mask,
-                                                                                               self.blstm.mask: mask[-1::-1]})
+                                                                                               self.flstm.mask: mask[k],
+                                                                                               self.blstm.mask: bmask[k]
+                                                                                               })
                         loss_array.append(loss)
                         if hout > 0:
                             A_ += 1
