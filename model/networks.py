@@ -5,7 +5,7 @@ import data.loader as loader
 
 
 class C_BLSTM:
-    def __init__(self, xhc_size, lr=0.01, max_input_length=200):
+    def __init__(self, xhc_size, lr=1e-4, max_input_length=200):
         with tf.variable_scope('BLSTM', reuse=tf.AUTO_REUSE):
 
             self.flstm = LSTM(xhc_size, 'FLSTM')
@@ -34,10 +34,10 @@ class C_BLSTM:
         with tf.variable_scope(name):
             #  Input shape : [1, 200, 2, 1]
             input = input[np.newaxis, :, :, np.newaxis]
-            output0 = self.set_conv(input, 2, 64, 'conv_layer0')    # Output0 shape : [1, 100, 2, 64]
-            output1 = self.set_conv(output0, 2, 128, 'conv_layer1')  # Output1 shape : [1, 50, 2, 128]
-            output2 = self.set_conv(output1, 2, 64, 'conv_layer2')  # Output2 shape : [1, 25, 2, 64]
-            output3 = self.set_conv(output2, 5, 1, 'conv_layer3')  # Output3 shape : [1, 5, 2, 1]
+            output0 = self.set_conv(input, 1, 64, 'conv_layer0')    # Output0 shape : [1, 200, 2, 64]
+            output1 = self.set_conv(output0, 2, 128, 'conv_layer1')  # Output1 shape : [1, 100, 2, 128]
+            output2 = self.set_conv(output1, 4, 64, 'conv_layer2')  # Output2 shape : [1, 25, 2, 64]
+            output3 = self.set_conv(output2, 1, 1, 'conv_layer3')  # Output3 shape : [1, 25, 2, 1]
             W = tf.get_variable('CNN_W', shape=[2, 1], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
             b = tf.get_variable('CNN_b', shape=[1], dtype=tf.float32,
@@ -80,7 +80,9 @@ class C_BLSTM:
                     ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
                                                              self.max_input_length)
 
+                    bmask = self.max_input_length - mask - 1
                     loss_array = []
+                    hout_array = []
                     A = len(results)
                     A_ = 0
                     A_and_A_ = 0
@@ -89,21 +91,25 @@ class C_BLSTM:
                     for k in range(np.shape(ddata)[0]):
                         loss, hout, _ = sess.run([self.loss, self.hout, self.optm], feed_dict={self.input: ddata[k],
                                                                                                self.label: [label[k]],
-                                                                                               self.flstm.mask: mask,
-                                                                                               self.blstm.mask: mask[-1::-1]})
+                                                                                               self.flstm.mask: mask[k],
+                                                                                               self.blstm.mask: bmask[k]})
                         loss_array.append(loss)
+                        hout_array.append(hout)
                         if hout > 0:
                             A_ += 1
                             if label[k] > 0:
                                 A_and_A_ += 1
                         if hout * label[k] > 0:
                             correct += 1.
+                    var = np.var(hout_array)
                     accuracy = correct / np.shape(ddata)[0]
                     p = (A_and_A_ / A_) if A_ > 1e-5 else 0.
                     r = (A_and_A_ / A) if A > 1e-5 else 0.
                     F = (2 * p * r / (p + r)) if (p + r) > 1e-5 else 0.
                     print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)))
-                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f, All: %d, Result: %d, A_: %d, correct: %d, Bad: %d' % (accuracy, p, r, F, np.shape(ddata)[0], A, A_, correct, (np.shape(ddata)[0] == A_)))
+                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f, All: %d, Result: %d, A_: %d,'
+                          ' correct: %d, Bad: %d, Var: %f' % (accuracy, p, r, F, np.shape(ddata)[0], A, A_, correct,
+                                                              (np.shape(ddata)[0] == A_), var))
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
 
     def test(self, data_path):
@@ -130,12 +136,13 @@ class C_BLSTM:
                 results = data[i]['results']
                 ddata, label, mask = loader.data_process(indexes, times, attributes, values, results,
                                                          self.max_input_length)
+                bmask = self.max_input_length - mask - 1
                 #  Each Sample has many combinations to input
                 for k in range(np.shape(ddata)[0]):
                     hout = sess.run(self.hout, feed_dict={self.input: ddata[k],
                                                           self.label: [label[k]],
-                                                          self.flstm.mask: mask,
-                                                          self.blstm.mask: mask[-1::-1]})
+                                                          self.flstm.mask: mask[k],
+                                                          self.blstm.mask: bmask[k]})
                     if hout > 0:
                         A_ += 1
                         if label[k] > 0:
@@ -158,7 +165,7 @@ class LSTM:
 
             self.name = name
             self.xhc_size = xhc_size
-            self.mask = tf.placeholder(dtype=tf.int32, shape=[None], name='mask')
+            self.mask = tf.placeholder(dtype=tf.int32, shape=[3], name='mask')
 
             self.input_gate = Gate(xhc_size, 'InputGate')
             self.forget_gate = Gate(xhc_size, 'ForgetGate')
@@ -183,7 +190,6 @@ class LSTM:
             h = tf.multiply(o, tf.nn.tanh(tf.reduce_mean(C)))
             hout_array.append(h)
         hout = tf.reduce_mean(tf.gather(hout_array, self.mask))
-        # hout = tf.reduce_mean(hout_array)
         return hout
 
 
