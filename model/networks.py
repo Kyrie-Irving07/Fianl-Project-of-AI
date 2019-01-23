@@ -20,9 +20,9 @@ class C_BLSTM:
             self.condition = self.Cond_conv(self.input)
             self.fhout = self.flstm.forward(self.input, self.condition)
             self.bhout = self.blstm.forward(tf.reverse(self.input, [0]), self.condition)
-            self.hout = tf.reduce_mean([self.fhout, self.bhout])
+            self.hout = tf.squeeze(tf.reduce_mean([self.fhout, self.bhout], 0))
 
-            self.loss = tf.nn.l2_loss(tf.subtract(self.label, self.hout))
+            self.loss = - tf.reduce_sum(tf.multiply(self.label, tf.log(self.hout)))
 
             print("Building optimization")
             self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
@@ -171,7 +171,7 @@ class LSTM:
             self.input_gate = Gate(xhc_size, 'InputGate')
             self.forget_gate = Gate(xhc_size, 'ForgetGate')
             self.state_gate = Gate(xhc_size, 'State_Gate', tf.nn.tanh)
-            self.output_gate = Gate(xhc_size, 'OutputGate', tf.nn.sigmoid, True)
+            self.output_gate = Gate(xhc_size, 'OutputGate', tf.nn.softmax, True)
 
     def forward(self, x, condition):
         hout_array = []
@@ -188,9 +188,9 @@ class LSTM:
             # Renew the state of LSTM
             C = tf.add(tf.multiply(input, state), tf.multiply(forget, C))
             o = self.output_gate.forward(x[i], h, C)
-            h = tf.multiply(o, tf.nn.tanh(tf.reduce_mean(C)))
-            hout_array.append(h)
-        hout = tf.reduce_mean(tf.gather(hout_array, self.mask))
+            # h = tf.multiply(o, tf.nn.tanh(tf.reduce_mean(C)))
+            hout_array.append(o)
+        hout = tf.reduce_mean(tf.gather(hout_array, self.mask), 0)
         return hout
 
 
@@ -215,7 +215,7 @@ class Gate:
 
     def forward(self, x, h, C=None):
         output = tf.add(tf.matmul(x[np.newaxis, :], self.W), tf.matmul(h, self.U))
-        output = tf.add(output, self.b)
+        output = tf.div(tf.add(output, self.b), 100)
         if C is None:
             assert (not self.outgate), 'No state C input to output gate'
         else:
